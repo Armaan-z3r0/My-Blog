@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="description" content="Beautifying your shell environment with fast tooling."><meta name="viewport" content="width=device-width"><link rel="icon" type="image/png" href="/favicon.png"><meta name="generator" content="Astro v6.2.1"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"><title>Terminal Ricing Guide | zeroday blogs</title><link rel="stylesheet" href="/_astro/BaseLayout.Pt7-JmY1.css">
+<style>.post-container{padding-top:20px;max-width:800px;margin:0 auto;width:100%}.post-article{margin-top:2rem}.post-header{margin-bottom:3rem;border-bottom:1px solid var(--border-subtle);padding-bottom:2rem}.post-meta{color:var(--accent-secondary);font-family:var(--font-mono);font-size:.9rem;margin-bottom:1.2rem;opacity:.8}.meta-comment{color:var(--text-muted)}.post-title{margin:0;font-family:var(--font-sans);font-size:clamp(2rem,8vw,3.5rem);font-weight:800;color:var(--text-primary);letter-spacing:-.02em;line-height:1.1}.post-tags{margin-top:1.5rem;display:flex;flex-wrap:wrap;gap:10px}.post-tag{font-family:var(--font-mono);font-size:.75rem;color:var(--accent-main);background:var(--accent-main-dim);padding:4px 12px;border-radius:4px;border:1px solid var(--border-glow);letter-spacing:1px}.markdown-content{font-family:var(--font-sans);color:var(--text-secondary);line-height:1.8;font-size:1.1rem}.post-footer{margin-top:60px;padding-bottom:60px}.back-btn{border-left:3px solid var(--accent-main)}.markdown-content img{margin:2rem 0;border-radius:8px;border:1px solid var(--border-subtle);max-width:100%;height:auto}.markdown-content h2{margin-top:3rem;margin-bottom:1.5rem;color:var(--text-primary);font-size:clamp(1.5rem,6vw,2.2rem)}.markdown-content h3{margin-top:2.5rem;margin-bottom:1rem;color:var(--text-primary);font-size:clamp(1.2rem,5vw,1.8rem)}.markdown-content p{margin-bottom:1.5rem}.markdown-content pre{margin:2rem 0;font-size:.9em;max-width:100%;overflow-x:auto;border-radius:8px;padding:1.25rem}.markdown-content ul,.markdown-content ol{margin-bottom:1.5rem;padding-left:1.5rem}@media(max-width:600px){.post-header{margin-bottom:2rem;padding-bottom:1.5rem}.markdown-content{font-size:1rem}.post-footer{margin-top:40px}}
+</style></head> <body> <!-- Preloader --> <div id="preloader" style="position: fixed; inset: 0; z-index: 10000; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease, visibility 0.6s ease;"> <div style="font-family: var(--font-mono); color: var(--accent-main); font-size: 1rem; letter-spacing: 2px;">INITIALIZING SYSTEM...</div> <div style="width: 200px; height: 2px; background: var(--border-subtle); margin-top: 20px; border-radius: 1px; overflow: hidden;"> <div style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-main), var(--accent-secondary)); animation: preloaderFill 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;"></div> </div> </div> <script>
+      // Immediately hide preloader if already initialized in this session
+      if (sessionStorage.getItem('systemInitialized') === 'true') {
+        document.getElementById('preloader').style.display = 'none';
+      }
+    </script>  <!-- Custom Cursor --> <div class="cursor-dot" id="cursorDot"></div> <div class="cursor-ring" id="cursorRing"></div> <header id="navbar" style="position: sticky; top: 0; left: 0; width: 100%; z-index: 1000; padding: 16px 0; background: rgba(15, 15, 18, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); transition: all 0.3s var(--ease-smooth);" data-astro-cid-3ef6ksr2> <div style="margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;" class="nav-container" data-astro-cid-3ef6ksr2> <a href="/" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800; color: var(--accent-main); letter-spacing: 1px; position: relative; border: none; white-space: nowrap; text-shadow: 0 0 10px rgba(255, 42, 42, 0.3);" data-astro-cid-3ef6ksr2> <span style="color: var(--accent-secondary); margin-right: 4px;" class="cursor-blink" data-astro-cid-3ef6ksr2>&gt;</span>zeroday@blogs:~$
+</a> <nav style="display: flex; gap: 40px; list-style: none;" class="nav-links" data-astro-cid-3ef6ksr2> <a href="/" class="nav-item" data-astro-cid-3ef6ksr2> <span class="nav-num" data-astro-cid-3ef6ksr2>01.</span> <span class="nav-text" data-astro-cid-3ef6ksr2>Home</span> </a> <a href="/blog" class="nav-item active" data-astro-cid-3ef6ksr2> <span class="nav-num" data-astro-cid-3ef6ksr2>02.</span> <span class="nav-text" data-astro-cid-3ef6ksr2>Blog</span> </a> <a href="/about" class="nav-item" data-astro-cid-3ef6ksr2> <span class="nav-num" data-astro-cid-3ef6ksr2>03.</span> <span class="nav-text" data-astro-cid-3ef6ksr2>About</span> </a> </nav> </div> </header> <main>  <section class="post-container"> <article class="post-article"> <header class="post-header"> <div class="post-meta"> <span class="meta-comment">//</span> DATE: Apr 10, 2026 </div> <h1 class="post-title">Terminal Ricing Guide</h1> <div class="post-tags"> <span class="post-tag">#linux</span><span class="post-tag">#rice</span><span class="post-tag">#terminal</span> </div> </header> <div class="markdown-content"> <h1 id="terminal-ricing">Terminal Ricing</h1>
+<p>You stare at the blinking cursor. It stares back at you. Might as well make it look good.</p>
+<p>We want efficiency combined with hacker aesthetics.</p>
+<h2 id="the-setup">The Setup</h2>
+<p>I recommend starting with <strong>Starship</strong>.
+Starship is written in Rust, which means it’s fast.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -sS</span><span style="color:#9ECBFF"> https://starship.rs/install.sh</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> sh</span></span></code></pre>
+<p>Then append this to your <code>.bashrc</code> or <code>.zshrc</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#79B8FF">eval</span><span style="color:#9ECBFF"> "$(</span><span style="color:#B392F0">starship</span><span style="color:#9ECBFF"> init zsh)"</span></span></code></pre>
+<p>Keep your <code>.config</code> strictly version-controlled. If your hard drive wipes tomorrow, you shouldn’t shed a tear.</p> </div> </article> <div class="post-footer"> <a href="/blog" class="btn back-btn">&lt; cd .. /blog</a> </div> </section>  </main> <footer id="footer" style="padding: 40px 0; margin-top: 60px; text-align: center; border-top: 1px solid var(--border-subtle);"> <div style="font-family: var(--font-sans); font-size: 0.9rem; color: var(--text-secondary);">
+Designed & Built by <span style="color: var(--accent-main); font-weight: 600;">Armaan Mulla</span> • &copy; 2026 zeroday blogs
+</div> </footer> <script>
+      // Handle the preloader timing if it wasn't hidden
+      window.addEventListener('load', () => {
+        const preloader = document.getElementById('preloader');
+        if (preloader && preloader.style.display !== 'none') {
+          setTimeout(() => {
+            preloader.classList.add('loaded');
+            sessionStorage.setItem('systemInitialized', 'true');
+          }, 1000);
+        }
+      });
+
+      // Custom Cursor tracking
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const cursorDot = document.getElementById('cursorDot');
+      const cursorRing = document.getElementById('cursorRing');
+
+      if (isTouchDevice) {
+        if (cursorDot) cursorDot.style.display = 'none';
+        if (cursorRing) cursorRing.style.display = 'none';
+      } else {
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let ringX = mouseX;
+        let ringY = mouseY;
+        
+        window.addEventListener('mousemove', (e) => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+          if(cursorDot) {
+            cursorDot.style.left = `${mouseX}px`;
+            cursorDot.style.top = `${mouseY}px`;
+          }
+        });
+        
+        const render = () => {
+          ringX += (mouseX - ringX) * 0.15;
+          ringY += (mouseY - ringY) * 0.15;
+          if(cursorRing) {
+            cursorRing.style.left = `${ringX}px`;
+            cursorRing.style.top = `${ringY}px`;
+          }
+          requestAnimationFrame(render);
+        };
+        requestAnimationFrame(render);
+        
+        // Add hovering class to interactive elements
+        const observer = new MutationObserver(() => {
+          document.querySelectorAll('a, button, input, .project-card, .info-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+              cursorDot?.classList.add('hovering');
+              cursorRing?.classList.add('hovering');
+            });
+            el.addEventListener('mouseleave', () => {
+              cursorDot?.classList.remove('hovering');
+              cursorRing?.classList.remove('hovering');
+            });
+          });
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    </script>  </body></html>

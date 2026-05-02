@@ -1,0 +1,258 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="description" content="How I set up a Puppet Server to manage software, users, services, and registry keys across every machine on our network — automatically. Also how Puppet made me install Ubuntu like a normal person."><meta name="viewport" content="width=device-width"><link rel="icon" type="image/png" href="/favicon.png"><meta name="generator" content="Astro v6.2.1"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"><title>I Automated Our Entire Office Network with Puppet — Here&#39;s How It Works | zeroday blogs</title><link rel="stylesheet" href="/_astro/BaseLayout.Pt7-JmY1.css">
+<style>.post-container{padding-top:20px;max-width:800px;margin:0 auto;width:100%}.post-article{margin-top:2rem}.post-header{margin-bottom:3rem;border-bottom:1px solid var(--border-subtle);padding-bottom:2rem}.post-meta{color:var(--accent-secondary);font-family:var(--font-mono);font-size:.9rem;margin-bottom:1.2rem;opacity:.8}.meta-comment{color:var(--text-muted)}.post-title{margin:0;font-family:var(--font-sans);font-size:clamp(2rem,8vw,3.5rem);font-weight:800;color:var(--text-primary);letter-spacing:-.02em;line-height:1.1}.post-tags{margin-top:1.5rem;display:flex;flex-wrap:wrap;gap:10px}.post-tag{font-family:var(--font-mono);font-size:.75rem;color:var(--accent-main);background:var(--accent-main-dim);padding:4px 12px;border-radius:4px;border:1px solid var(--border-glow);letter-spacing:1px}.markdown-content{font-family:var(--font-sans);color:var(--text-secondary);line-height:1.8;font-size:1.1rem}.post-footer{margin-top:60px;padding-bottom:60px}.back-btn{border-left:3px solid var(--accent-main)}.markdown-content img{margin:2rem 0;border-radius:8px;border:1px solid var(--border-subtle);max-width:100%;height:auto}.markdown-content h2{margin-top:3rem;margin-bottom:1.5rem;color:var(--text-primary);font-size:clamp(1.5rem,6vw,2.2rem)}.markdown-content h3{margin-top:2.5rem;margin-bottom:1rem;color:var(--text-primary);font-size:clamp(1.2rem,5vw,1.8rem)}.markdown-content p{margin-bottom:1.5rem}.markdown-content pre{margin:2rem 0;font-size:.9em;max-width:100%;overflow-x:auto;border-radius:8px;padding:1.25rem}.markdown-content ul,.markdown-content ol{margin-bottom:1.5rem;padding-left:1.5rem}@media(max-width:600px){.post-header{margin-bottom:2rem;padding-bottom:1.5rem}.markdown-content{font-size:1rem}.post-footer{margin-top:40px}}
+</style></head> <body> <!-- Preloader --> <div id="preloader" style="position: fixed; inset: 0; z-index: 10000; background: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease, visibility 0.6s ease;"> <div style="font-family: var(--font-mono); color: var(--accent-main); font-size: 1rem; letter-spacing: 2px;">INITIALIZING SYSTEM...</div> <div style="width: 200px; height: 2px; background: var(--border-subtle); margin-top: 20px; border-radius: 1px; overflow: hidden;"> <div style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-main), var(--accent-secondary)); animation: preloaderFill 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;"></div> </div> </div> <script>
+      // Immediately hide preloader if already initialized in this session
+      if (sessionStorage.getItem('systemInitialized') === 'true') {
+        document.getElementById('preloader').style.display = 'none';
+      }
+    </script>  <!-- Custom Cursor --> <div class="cursor-dot" id="cursorDot"></div> <div class="cursor-ring" id="cursorRing"></div> <header id="navbar" style="position: sticky; top: 0; left: 0; width: 100%; z-index: 1000; padding: 16px 0; background: rgba(15, 15, 18, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-subtle); transition: all 0.3s var(--ease-smooth);" data-astro-cid-3ef6ksr2> <div style="margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;" class="nav-container" data-astro-cid-3ef6ksr2> <a href="/" style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800; color: var(--accent-main); letter-spacing: 1px; position: relative; border: none; white-space: nowrap; text-shadow: 0 0 10px rgba(255, 42, 42, 0.3);" data-astro-cid-3ef6ksr2> <span style="color: var(--accent-secondary); margin-right: 4px;" class="cursor-blink" data-astro-cid-3ef6ksr2>&gt;</span>zeroday@blogs:~$
+</a> <nav style="display: flex; gap: 40px; list-style: none;" class="nav-links" data-astro-cid-3ef6ksr2> <a href="/" class="nav-item" data-astro-cid-3ef6ksr2> <span class="nav-num" data-astro-cid-3ef6ksr2>01.</span> <span class="nav-text" data-astro-cid-3ef6ksr2>Home</span> </a> <a href="/blog" class="nav-item active" data-astro-cid-3ef6ksr2> <span class="nav-num" data-astro-cid-3ef6ksr2>02.</span> <span class="nav-text" data-astro-cid-3ef6ksr2>Blog</span> </a> <a href="/about" class="nav-item" data-astro-cid-3ef6ksr2> <span class="nav-num" data-astro-cid-3ef6ksr2>03.</span> <span class="nav-text" data-astro-cid-3ef6ksr2>About</span> </a> </nav> </div> </header> <main>  <section class="post-container"> <article class="post-article"> <header class="post-header"> <div class="post-meta"> <span class="meta-comment">//</span> DATE: Apr 30, 2026 </div> <h1 class="post-title">I Automated Our Entire Office Network with Puppet — Here&#39;s How It Works</h1> <div class="post-tags"> <span class="post-tag">#devops</span><span class="post-tag">#automation</span><span class="post-tag">#puppet</span><span class="post-tag">#sysadmin</span><span class="post-tag">#infrastructure</span> </div> </header> <div class="markdown-content"> <p>So at work I got tasked with figuring out how to manage software and configurations across all the machines on our internal network without having to touch each one manually. You know the deal — IT nightmare stuff. Someone needs Chrome installed, someone else needs VLC, and before you know it everything is inconsistent chaos and you’re the one getting blamed for it.</p>
+<p>The answer? <strong>Puppet.</strong> And honestly, it’s pretty sick once it’s <em>actually running</em> — emphasis on “once it’s actually running” because getting there was a journey.</p>
+<p>This post is a breakdown of what I built, how it works, and the several moments where I questioned my life choices.</p>
+<hr>
+<h2 id="what-even-is-puppet">What Even Is Puppet?</h2>
+<p>Puppet is a configuration management tool. The idea is simple: instead of logging into every machine and doing stuff manually, you <em>declare</em> what state you want each machine to be in — what software should be installed, what services should be running, what files should exist — and Puppet makes it happen. Automatically. On a schedule.</p>
+<p>It’s been around forever and is battle-tested in proper enterprise environments. Think of it like writing a contract for your machines and having Puppet be the one enforcer who actually shows up.</p>
+<p>Sounds great, right? It is. But first, you have to install it.</p>
+<hr>
+<h2 id="step-0--the-distro-situation-a-moment-of-grief">Step 0 — The Distro Situation (A Moment of Grief)</h2>
+<p>I run Arch. I love Arch. Arch is my home. But Puppet, in its infinite wisdom, decided that its official package support would be for Debian and Red Hat based systems only. No properly maintained AUR package for the server. No official repo. Just vibes and disappointment.</p>
+<p>So I had to spin up <strong>Ubuntu Server</strong> for the Puppet Server. On a ThinkPad. Like some kind of normie.</p>
+<p>It’s fine. Ubuntu is fine. I’m fine. We don’t need to talk about this anymore.</p>
+<hr>
+<h2 id="the-setup">The Setup</h2>
+<p>The whole thing runs on a <strong>server–agent</strong> model. One Puppet Server holds all the rules (called <em>catalogs</em>), and every machine on the network runs a Puppet Agent that checks in every 30 minutes and does whatever it’s told. It’s essentially a very obedient robot army, which is exactly what we needed.</p>
+<p>Here’s the hardware:</p>
+<p><strong>Puppet Server</strong> — a Lenovo ThinkPad T460 running Ubuntu Linux <em>(pours one out for Arch)</em></p>
+<ul>
+<li>Intel Core i5-6200U, 8 GB RAM, 256 GB SSD</li>
+<li>Puppet 8.10.0</li>
+<li>Static IP: <code>192.168.1.100</code></li>
+<li>Hostname: <code>thinkmad.local</code></li>
+</ul>
+<p><strong>Agent Node</strong> — a Windows machine called <code>ergode-mu-515</code></p>
+<p>All communication is SSL/TLS encrypted over port 8140. Puppet has its own built-in Certificate Authority that handles this — every node gets a signed cert before it’s allowed to talk to the server. Properly secure.</p>
+<hr>
+<h2 id="setting-up-the-puppet-server-a-guided-tour-through-dependency-hell">Setting Up the Puppet Server (A Guided Tour Through Dependency Hell)</h2>
+<p>Here’s the thing nobody tells you upfront: <code>puppetserver</code> is a Java application. That means before you even get to Puppet itself, you’re pulling in the JVM, a mountain of Ruby gems, and enough dependencies to make <code>apt</code> momentarily question its own existence. You run <code>apt-get install puppetserver</code> and then you just… wait. And watch. And start wondering if anything is actually happening.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Add the Puppet 8 repo</span></span>
+<span class="line"><span style="color:#B392F0">wget</span><span style="color:#9ECBFF"> https://apt.puppet.com/puppet8-release-</span><span style="color:#E1E4E8">$(</span><span style="color:#B392F0">lsb_release</span><span style="color:#79B8FF"> -cs</span><span style="color:#E1E4E8">)</span><span style="color:#9ECBFF">.deb</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> dpkg</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> puppet8-release-</span><span style="color:#E1E4E8">$(</span><span style="color:#B392F0">lsb_release</span><span style="color:#79B8FF"> -cs</span><span style="color:#E1E4E8">)</span><span style="color:#9ECBFF">.deb</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt-get</span><span style="color:#9ECBFF"> update</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Install (go make tea, seriously)</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> apt-get</span><span style="color:#9ECBFF"> install</span><span style="color:#9ECBFF"> puppetserver</span><span style="color:#79B8FF"> -y</span></span></code></pre>
+<p>Watch <code>apt</code> confidently download half the internet and then act like that’s completely normal. It is, apparently. This is fine.</p>
+<p>Once that marathon finishes, edit <code>/etc/puppetlabs/puppet/puppet.conf</code> to set DNS alt names <strong>before</strong> you start the server for the first time. This part is load-bearing — I’ll explain exactly why in the Rough Edges section:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#B392F0">[server]</span></span>
+<span class="line"><span style="color:#F97583">dns_alt_names</span><span style="color:#E1E4E8"> = puppet, thinkmad.local, 192.168.1.100</span></span></code></pre>
+<p>Then start it:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> start</span><span style="color:#9ECBFF"> puppetserver</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> enable</span><span style="color:#9ECBFF"> puppetserver</span></span></code></pre>
+<h3 id="the-jvm-memory-situation">The JVM Memory Situation</h3>
+<p>Puppet Server runs on the JVM and by default allocates <strong>2 GB of heap memory</strong>. On an 8 GB machine, that’s a quarter of your RAM just sitting there being Java about things. Startup was slow enough that I thought it had crashed. Twice.</p>
+<p>The fix is simple — edit <code>/etc/default/puppetserver</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#E1E4E8">JAVA_ARGS</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"-Xms512m -Xmx512m"</span></span></code></pre>
+<p>512 MB works fine for a small environment. The server comes up in a reasonable time and stops eating RAM like it’s at a buffet. Not really Puppet’s fault — JVM gonna JVM.</p>
+<hr>
+<h2 id="connecting-the-windows-agent">Connecting the Windows Agent</h2>
+<p>On the Windows side, Puppet provides an <code>.msi</code> installer which is probably the least painful part of this whole project. Silent install via Command Prompt (run as Administrator):</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bat"><code><span class="line"><span style="color:#F97583">msiexec</span><span style="color:#E1E4E8"> /qn /norestart /i puppet-agent-8.x.x-x64.msi </span><span style="color:#79B8FF">^</span></span>
+<span class="line"><span style="color:#E1E4E8">  PUPPET_MASTER_SERVER=192.168.1.100</span></span></code></pre>
+<p>Edit the agent config at <code>C:\ProgramData\PuppetLabs\puppet\etc\puppet.conf</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#B392F0">[agent]</span></span>
+<span class="line"><span style="color:#F97583">server</span><span style="color:#E1E4E8"> = 192.168.1.100</span></span></code></pre>
+<p>Then run the agent to send a certificate signing request to the server:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bat"><code><span class="line"><span style="color:#9ECBFF">"C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat"</span><span style="color:#E1E4E8"> agent --test</span></span></code></pre>
+<p>Yeah, that full path. Every single time. Because Puppet doesn’t add itself to the Windows PATH, presumably as a character-building exercise.</p>
+<p>Back on the server, sign the cert:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> /opt/puppetlabs/bin/puppetserver</span><span style="color:#9ECBFF"> ca</span><span style="color:#9ECBFF"> list</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> /opt/puppetlabs/bin/puppetserver</span><span style="color:#9ECBFF"> ca</span><span style="color:#9ECBFF"> sign</span><span style="color:#79B8FF"> --certname</span><span style="color:#9ECBFF"> ergode-mu-515</span></span></code></pre>
+<p>Run the agent one more time and the node is enrolled. You now own that machine.</p>
+<hr>
+<h2 id="the-good-part--actually-managing-stuff">The Good Part — Actually Managing Stuff</h2>
+<p>This is where it genuinely gets fun. All the configuration lives in a file called <code>site.pp</code> on the server:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>/etc/puppetlabs/code/environments/production/manifests/site.pp</span></span></code></pre>
+<p><em>(yes the file extension is .pp. no I don’t know why. yes it works. that’s enough for me.)</em></p>
+<p>You match nodes by hostname and declare what you want. Here’s the full manifest for the Windows agent — software, services, a user account, files, and registry keys all in one go:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="puppet"><code><span class="line"><span style="color:#F97583">node</span><span style="color:#9ECBFF"> 'ergode-mu-515'</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  # Bootstrap Chocolatey (basically apt but for Windows, bless)</span></span>
+<span class="line"><span style="color:#F97583">  include</span><span style="color:#FFAB70"> chocolatey</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  # Install software</span></span>
+<span class="line"><span style="color:#F97583">  package</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'googlechrome'</span><span style="color:#E1E4E8">:    </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> installed, </span><span style="color:#79B8FF">provider </span><span style="color:#E1E4E8">=> chocolatey, }</span></span>
+<span class="line"><span style="color:#F97583">  package</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'7zip'</span><span style="color:#E1E4E8">:            </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> installed, </span><span style="color:#79B8FF">provider </span><span style="color:#E1E4E8">=> chocolatey, }</span></span>
+<span class="line"><span style="color:#F97583">  package</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'notepadplusplus'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> installed, </span><span style="color:#79B8FF">provider </span><span style="color:#E1E4E8">=> chocolatey, }</span></span>
+<span class="line"><span style="color:#F97583">  package</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'vlc'</span><span style="color:#E1E4E8">:             </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> installed, </span><span style="color:#79B8FF">provider </span><span style="color:#E1E4E8">=> chocolatey, }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  # Enforce service states</span></span>
+<span class="line"><span style="color:#F97583">  service</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'wuauserv'</span><span style="color:#E1E4E8">:       </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">running</span><span style="color:#E1E4E8">,  </span><span style="color:#79B8FF">enable </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">true</span><span style="color:#E1E4E8">,  }  </span><span style="color:#6A737D"># Windows Update</span></span>
+<span class="line"><span style="color:#F97583">  service</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'MpsSvc'</span><span style="color:#E1E4E8">:         </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">running</span><span style="color:#E1E4E8">,  </span><span style="color:#79B8FF">enable </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">true</span><span style="color:#E1E4E8">,  }  </span><span style="color:#6A737D"># Windows Firewall</span></span>
+<span class="line"><span style="color:#F97583">  service</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'RemoteRegistry'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">stopped</span><span style="color:#E1E4E8">,  </span><span style="color:#79B8FF">enable </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">false</span><span style="color:#E1E4E8">, }  </span><span style="color:#6A737D"># Disabled</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  # Create a local admin user — no touching, Puppet's got it</span></span>
+<span class="line"><span style="color:#F97583">  user</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'puppetadmin'</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">    ensure   </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">present</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    password </span><span style="color:#E1E4E8">=> </span><span style="color:#9ECBFF">'StrongPass@123'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    groups   </span><span style="color:#E1E4E8">=> [</span><span style="color:#9ECBFF">'Administrators'</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#79B8FF">    comment  </span><span style="color:#E1E4E8">=> </span><span style="color:#9ECBFF">'Managed by Puppet'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  # Managed directories and files</span></span>
+<span class="line"><span style="color:#F97583">  file</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'C:/PuppetManaged'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">directory</span><span style="color:#E1E4E8">, }</span></span>
+<span class="line"><span style="color:#F97583">  file</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'C:/PuppetManaged/config.txt'</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">    ensure  </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">present</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    content </span><span style="color:#E1E4E8">=> </span><span style="color:#9ECBFF">'# Managed by Puppet - do not edit manually'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    require </span><span style="color:#E1E4E8">=> </span><span style="color:#F97583">File</span><span style="color:#E1E4E8">[</span><span style="color:#9ECBFF">'C:/PuppetManaged'</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#F97583">  file</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'C:/PuppetManaged/scripts'</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">    ensure  </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">directory</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">    require </span><span style="color:#E1E4E8">=> </span><span style="color:#F97583">File</span><span style="color:#E1E4E8">[</span><span style="color:#9ECBFF">'C:/PuppetManaged'</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  # Registry keys — telemetry off, and a little "Puppet woz here" stamp</span></span>
+<span class="line"><span style="color:#F97583">  registry_key</span><span style="color:#E1E4E8">   { </span><span style="color:#9ECBFF">'HKLM</span><span style="color:#79B8FF">\S</span><span style="color:#9ECBFF">OFTWARE</span><span style="color:#79B8FF">\P</span><span style="color:#9ECBFF">olicies</span><span style="color:#79B8FF">\M</span><span style="color:#9ECBFF">icrosoft</span><span style="color:#79B8FF">\W</span><span style="color:#9ECBFF">indows</span><span style="color:#79B8FF">\D</span><span style="color:#9ECBFF">ataCollection'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">present</span><span style="color:#E1E4E8">, }</span></span>
+<span class="line"><span style="color:#F97583">  registry_value</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'HKLM</span><span style="color:#79B8FF">\S</span><span style="color:#9ECBFF">OFTWARE</span><span style="color:#79B8FF">\.</span><span style="color:#9ECBFF">..</span><span style="color:#79B8FF">\A</span><span style="color:#9ECBFF">llowTelemetry'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">present</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">type </span><span style="color:#E1E4E8">=> dword, </span><span style="color:#79B8FF">data </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">, }</span></span>
+<span class="line"><span style="color:#F97583">  registry_key</span><span style="color:#E1E4E8">   { </span><span style="color:#9ECBFF">'HKLM</span><span style="color:#79B8FF">\S</span><span style="color:#9ECBFF">OFTWARE</span><span style="color:#79B8FF">\P</span><span style="color:#9ECBFF">uppetManaged'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">ensure </span><span style="color:#E1E4E8">=> </span><span style="color:#79B8FF">present</span><span style="color:#E1E4E8">, }</span></span>
+<span class="line"><span style="color:#F97583">  registry_value</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'HKLM</span><span style="color:#79B8FF">\S</span><span style="color:#9ECBFF">OFTWARE</span><span style="color:#79B8FF">\P</span><span style="color:#9ECBFF">uppetManaged</span><span style="color:#79B8FF">\M</span><span style="color:#9ECBFF">anagedBy'</span><span style="color:#E1E4E8">:   </span><span style="color:#79B8FF">type </span><span style="color:#E1E4E8">=> string, </span><span style="color:#79B8FF">data </span><span style="color:#E1E4E8">=> </span><span style="color:#9ECBFF">'Puppet'</span><span style="color:#E1E4E8">, }</span></span>
+<span class="line"><span style="color:#F97583">  registry_value</span><span style="color:#E1E4E8"> { </span><span style="color:#9ECBFF">'HKLM</span><span style="color:#79B8FF">\S</span><span style="color:#9ECBFF">OFTWARE</span><span style="color:#79B8FF">\P</span><span style="color:#9ECBFF">uppetManaged</span><span style="color:#79B8FF">\E</span><span style="color:#9ECBFF">nvironment'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">type </span><span style="color:#E1E4E8">=> string, </span><span style="color:#79B8FF">data </span><span style="color:#E1E4E8">=> </span><span style="color:#9ECBFF">'production'</span><span style="color:#E1E4E8">, }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>What this manifest is doing in plain English:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Category</th><th>What’s happening</th></tr></thead><tbody><tr><td>Package manager</td><td>Chocolatey bootstrapped automatically</td></tr><tr><td>Software</td><td>Chrome, 7-Zip, Notepad++, VLC installed</td></tr><tr><td>Services</td><td>Windows Update + Firewall forced on; Remote Registry forced off</td></tr><tr><td>User account</td><td><code>puppetadmin</code> created as local admin, zero manual steps</td></tr><tr><td>Files</td><td><code>C:/PuppetManaged/</code> directory, config file, scripts folder</td></tr><tr><td>Registry</td><td>Telemetry disabled; environment info stamped into registry</td></tr></tbody></table>
+<p>The agent applies all of this in <strong>6.58 seconds</strong> with no manual steps on the Windows machine. That’s the payoff — you sit there and watch things configure themselves like some kind of sysadmin wizard.</p>
+<hr>
+<h2 id="does-it-actually-work">Does It Actually Work?</h2>
+<p>Yes, and it’s satisfying every time:</p>
+<ul>
+<li><code>systemctl status puppetserver</code> — active, running since boot, JVM behaving itself</li>
+<li><code>puppetserver ca list --all</code> — both nodes with signed SHA256 certs, nice</li>
+<li><code>puppet agent --test</code> on Windows — contacts <code>thinkmad.local:8140</code>, compiles catalog, applies cleanly in 6.58 seconds</li>
+<li><code>choco list</code> on Windows — all four packages sitting there like they were always meant to be</li>
+<li>Windows Local Users and Groups — <code>puppetadmin</code> in Administrators, created entirely by Puppet, no human involved</li>
+</ul>
+<p>That last one is genuinely funny to watch the first time. You didn’t open the Windows machine. You didn’t touch it. You just wrote some code on a completely different computer and a user account appeared on another machine across the network. It feels wrong in the best way.</p>
+<hr>
+<h2 id="the-rough-edges-a-comedy-of-errors">The Rough Edges (A Comedy of Errors)</h2>
+<p>No honest writeup skips this section.</p>
+<p><strong>The DNS alt names ambush.</strong> Puppet Server must have <code>dns_alt_names</code> configured in <code>puppet.conf</code> <em>before</em> you start it for the first time. Not after. Before. If you forget — and you will forget, because nothing in the install process loudly warns you about this — agents connecting via IP get SSL errors and you get zero useful information about why. The fix is to stop the server, delete the entire CA, and regenerate all certificates from scratch. I found this out the way everyone finds things out: by doing it wrong first and spending a good chunk of time staring at error messages that made no sense.</p>
+<p><strong>Manual certificate signing.</strong> Every new node has to have its cert manually signed on the server before it can do anything. Autosigning exists but comes with security tradeoffs, so it stays manual for now. It’s not terrible, just the kind of thing that makes onboarding ten machines at once feel like a chore.</p>
+<p><strong>Puppet and clocks — a passive aggressive relationship.</strong> Puppet’s SSL validation is extremely sensitive to clock drift between nodes. If the clocks on your machines are even slightly out of sync, agents throw certificate errors that look completely unrelated to clocks. NTP wasn’t configured as part of this setup, which means there’s a ticking time bomb somewhere in this network. Literally. It’s on the to-do list.</p>
+<p><strong>Windows PATH, or the complete absence of it.</strong> Puppet doesn’t add its binaries to the Windows PATH by default. So every single command is:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bat"><code><span class="line"><span style="color:#9ECBFF">"C:\Program Files\Puppet Labs\Puppet\bin\puppet.bat"</span><span style="color:#E1E4E8"> agent --test</span></span></code></pre>
+<p>instead of just <code>puppet agent --test</code>. Every. Time. It’s not a dealbreaker — just one of those small daily frictions that adds up. You get used to it the same way you get used to a slightly wobbly chair.</p>
+<p><strong>Passwords hardcoded in the manifest.</strong> The <code>puppetadmin</code> password is sitting right there in <code>site.pp</code> in plain text. This is absolutely a demo shortcut and something Hiera exists specifically to fix — you’d pull config values like that out into a separate data layer. It’s on the improvement list, it just didn’t make it into this version.</p>
+<hr>
+<h2 id="whats-next">What’s Next</h2>
+<p>The demo works well but there’s a clear list of things to fix before this scales to anything real:</p>
+<ul>
+<li><strong>Hiera</strong> — get passwords and config values out of the manifest</li>
+<li><strong>PuppetDB</strong> — enable run history and resource querying</li>
+<li><strong>Autosigning with a shared secret</strong> — speed up node onboarding</li>
+<li><strong>NTP enforcement</strong> — stop waiting for the clock drift disaster</li>
+<li><strong>CI/CD pipeline</strong> — stop pushing code changes manually like it’s 2010</li>
+<li><strong>More hardware</strong> — the ThinkPad is a trooper but it has limits</li>
+</ul>
+<hr>
+<h2 id="wrapping-up">Wrapping Up</h2>
+<p>Puppet is genuinely powerful once you’ve wrestled it into submission. The dependency install is heavy, the JVM needs babysitting, the DNS alt names thing will catch you off guard, and yes — it forced me off Arch. I’m not bitter. I’m totally not bitter.</p>
+<p>But when you’re watching a Windows machine configure itself from across the network while you sit completely hands-off? That feeling makes up for all of it.</p>
+<p>If you’re doing any kind of sysadmin or infra work and haven’t looked at config management tools yet, this is a great rabbit hole. Just read the docs before you start the server for the first time. And set up NTP. And check your DNS alt names. And maybe have some tea ready for the install.</p>
+<p>You’ll be fine.</p> </div> </article> <div class="post-footer"> <a href="/blog" class="btn back-btn">&lt; cd .. /blog</a> </div> </section>  </main> <footer id="footer" style="padding: 40px 0; margin-top: 60px; text-align: center; border-top: 1px solid var(--border-subtle);"> <div style="font-family: var(--font-sans); font-size: 0.9rem; color: var(--text-secondary);">
+Designed & Built by <span style="color: var(--accent-main); font-weight: 600;">Armaan Mulla</span> • &copy; 2026 zeroday blogs
+</div> </footer> <script>
+      // Handle the preloader timing if it wasn't hidden
+      window.addEventListener('load', () => {
+        const preloader = document.getElementById('preloader');
+        if (preloader && preloader.style.display !== 'none') {
+          setTimeout(() => {
+            preloader.classList.add('loaded');
+            sessionStorage.setItem('systemInitialized', 'true');
+          }, 1000);
+        }
+      });
+
+      // Custom Cursor tracking
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const cursorDot = document.getElementById('cursorDot');
+      const cursorRing = document.getElementById('cursorRing');
+
+      if (isTouchDevice) {
+        if (cursorDot) cursorDot.style.display = 'none';
+        if (cursorRing) cursorRing.style.display = 'none';
+      } else {
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let ringX = mouseX;
+        let ringY = mouseY;
+        
+        window.addEventListener('mousemove', (e) => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+          if(cursorDot) {
+            cursorDot.style.left = `${mouseX}px`;
+            cursorDot.style.top = `${mouseY}px`;
+          }
+        });
+        
+        const render = () => {
+          ringX += (mouseX - ringX) * 0.15;
+          ringY += (mouseY - ringY) * 0.15;
+          if(cursorRing) {
+            cursorRing.style.left = `${ringX}px`;
+            cursorRing.style.top = `${ringY}px`;
+          }
+          requestAnimationFrame(render);
+        };
+        requestAnimationFrame(render);
+        
+        // Add hovering class to interactive elements
+        const observer = new MutationObserver(() => {
+          document.querySelectorAll('a, button, input, .project-card, .info-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+              cursorDot?.classList.add('hovering');
+              cursorRing?.classList.add('hovering');
+            });
+            el.addEventListener('mouseleave', () => {
+              cursorDot?.classList.remove('hovering');
+              cursorRing?.classList.remove('hovering');
+            });
+          });
+        });
+        
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    </script>  </body></html>
